@@ -60,6 +60,8 @@ def wait_for_db():
                 print("❌ Could not connect to database")
                 print("⚠️ Continuing without database...")
 
+wait_for_db()  # ← NO OLVIDES LLAMAR ESTA FUNCIÓN
+
 # ========================
 # 🔑 JWT FUNCTIONS
 # ========================
@@ -135,9 +137,11 @@ def get_pokemon(name: str, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"❌ Error in /pokemon: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
-   
 
-   @app.get("/debug/tables")
+# ========================
+# 🐛 DEBUG ENDPOINTS (TEMPORALES)
+# ========================
+@app.get("/debug/tables")
 def debug_tables(db: Session = Depends(get_db)):
     try:
         # Listar todas las tablas y columnas
@@ -161,6 +165,7 @@ def debug_recreate_tables():
         return {"message": "✅ Tables recreated successfully"}
     except Exception as e:
         return {"error": str(e)}
+
 # ========================
 # 🧠 LOCAL EXECUTION
 # ========================
