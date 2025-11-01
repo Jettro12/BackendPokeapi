@@ -46,6 +46,8 @@ def wait_for_db():
         try:
             with engine.connect() as conn:
                 print("✅ Database connection successful")
+            # Forzar creación de tablas
+            Base.metadata.drop_all(bind=engine)
             Base.metadata.create_all(bind=engine)
             print("✅ Tables created successfully")
             return
@@ -57,8 +59,6 @@ def wait_for_db():
             else:
                 print("❌ Could not connect to database")
                 print("⚠️ Continuing without database...")
-
-wait_for_db()
 
 # ========================
 # 🔑 JWT FUNCTIONS
@@ -135,7 +135,32 @@ def get_pokemon(name: str, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"❌ Error in /pokemon: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
+   
 
+   @app.get("/debug/tables")
+def debug_tables(db: Session = Depends(get_db)):
+    try:
+        # Listar todas las tablas y columnas
+        result = db.execute("""
+            SELECT table_name, column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_schema = 'public'
+            ORDER BY table_name, ordinal_position
+        """)
+        columns = [{"table": row[0], "column": row[1], "type": row[2]} for row in result]
+        return {"columns": columns}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/debug/recreate-tables")
+def debug_recreate_tables():
+    try:
+        # Forzar recreación de tablas
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        return {"message": "✅ Tables recreated successfully"}
+    except Exception as e:
+        return {"error": str(e)}
 # ========================
 # 🧠 LOCAL EXECUTION
 # ========================
